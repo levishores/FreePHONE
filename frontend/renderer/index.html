@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreeSWITCH CTI Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="header-left">
+                <h1>FreeSWITCH CTI Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div id="connection-status" class="status-indicator disconnected">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Disconnected</span>
+                </div>
+                <div class="user-info">
+                    <span id="user-name">Guest</span>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="dashboard-grid">
+                <!-- Call Visualizer Panel -->
+                <div class="panel call-panel">
+                    <div class="panel-header">
+                        <h2>Active Calls</h2>
+                        <div class="panel-actions">
+                            <button class="btn btn-small" id="refresh-calls">Refresh</button>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div id="call-visualizer" class="visualizer-container">
+                            <div class="empty-state">
+                                <div class="empty-icon">📞</div>
+                                <p>No active calls</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Park Orbit Panel -->
+                <div class="panel park-panel">
+                    <div class="panel-header">
+                        <h2>Park Orbits</h2>
+                    </div>
+                    <div class="panel-content">
+                        <div id="park-visualizer" class="visualizer-container">
+                            <!-- Park orbits will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conference Panel -->
+                <div class="panel conference-panel">
+                    <div class="panel-header">
+                        <h2>Conference Rooms</h2>
+                    </div>
+                    <div class="panel-content">
+                        <div id="conference-visualizer" class="visualizer-container">
+                            <!-- Conferences will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics Panel -->
+                <div class="panel stats-panel">
+                    <div class="panel-header">
+                        <h2>Statistics</h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="total-calls">0</div>
+                                <div class="stat-label">Total Calls</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="active-calls">0</div>
+                                <div class="stat-label">Active Calls</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="parked-calls">0</div>
+                                <div class="stat-label">Parked Calls</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="conference-participants">0</div>
+                                <div class="stat-label">In Conference</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Context Menu -->
+        <div id="context-menu" class="context-menu hidden">
+            <div class="context-menu-item" data-action="transfer">Transfer Call</div>
+            <div class="context-menu-item" data-action="park">Park Call</div>
+            <div class="context-menu-item" data-action="hangup">Hangup Call</div>
+        </div>
+        
+        <!-- Modal for Transfer Dialog -->
+        <div id="transfer-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Transfer Call</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <label for="transfer-destination">Destination:</label>
+                    <input type="text" id="transfer-destination" placeholder="Extension or phone number">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-transfer">Cancel</button>
+                    <button class="btn btn-primary" id="confirm-transfer">Transfer</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal for Park Dialog -->
+        <div id="park-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Park Call</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <label for="park-orbit">Park Orbit:</label>
+                    <select id="park-orbit">
+                        <option value="">Select orbit...</option>
+                        <option value="701">701</option>
+                        <option value="702">702</option>
+                        <option value="703">703</option>
+                        <option value="704">704</option>
+                        <option value="705">705</option>
+                        <option value="706">706</option>
+                        <option value="707">707</option>
+                        <option value="708">708</option>
+                        <option value="709">709</option>
+                        <option value="710">710</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-park">Cancel</button>
+                    <button class="btn btn-primary" id="confirm-park">Park</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="main.js"></script>
+</body>
+</html>

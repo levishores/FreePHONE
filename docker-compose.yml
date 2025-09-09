@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: cti_db
+      POSTGRES_USER: cti_user
+      POSTGRES_PASSWORD: cti_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://cti_user:cti_password@postgres:5432/cti_db
+      SECRET_KEY: your-super-secret-jwt-key-here-change-in-production
+      FREESWITCH_HOST: ${FREESWITCH_HOST:-192.168.1.100}
+      FREESWITCH_ESL_PORT: ${FREESWITCH_ESL_PORT:-8021}
+      FREESWITCH_ESL_PASSWORD: ${FREESWITCH_ESL_PASSWORD:-ClueCon}
+      SSH_USERNAME: ${SSH_USERNAME:-freeswitch}
+      SSH_PRIVATE_KEY_PATH: /app/ssh/id_rsa
+      DEBUG: ${DEBUG:-true}
+    volumes:
+      - ./ssh:/app/ssh:ro
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
