@@ -4,7 +4,7 @@ from typing import List
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = "postgresql+asyncpg://user:password@localhost:5432/cti_db"
+    database_url: str = "sqlite+aiosqlite:///./cti_dev.db"
     
     # JWT
     secret_key: str = "your-super-secret-jwt-key-here"

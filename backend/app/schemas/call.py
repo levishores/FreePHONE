@@ -14,8 +14,8 @@ class CallBase(BaseModel):
 
 
 class CallCreate(CallBase):
-    extension_id: Optional[uuid.UUID] = None
-    conference_id: Optional[uuid.UUID] = None
+    extension_id: Optional[str] = None
+    conference_id: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = {}
 
 
@@ -25,8 +25,8 @@ class CallUpdate(BaseModel):
     caller_id_name: Optional[str] = None
     destination_number: Optional[str] = None
     state: Optional[str] = None
-    extension_id: Optional[uuid.UUID] = None
-    conference_id: Optional[uuid.UUID] = None
+    extension_id: Optional[str] = None
+    conference_id: Optional[str] = None
     park_orbit: Optional[str] = None
     answered_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
@@ -34,9 +34,9 @@ class CallUpdate(BaseModel):
 
 
 class CallRead(CallBase):
-    id: uuid.UUID
-    extension_id: Optional[uuid.UUID] = None
-    conference_id: Optional[uuid.UUID] = None
+    id: str
+    extension_id: Optional[str] = None
+    conference_id: Optional[str] = None
     park_orbit: Optional[str] = None
     created_at: datetime
     answered_at: Optional[datetime] = None

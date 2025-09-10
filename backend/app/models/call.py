@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey, Text
+from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey, Text, JSON
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -9,20 +9,20 @@ from datetime import datetime
 class Call(Base):
     __tablename__ = "calls"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     uuid = Column(String(100), unique=True, nullable=False)  # FreeSWITCH call UUID
     direction = Column(String(20))  # inbound, outbound, internal
     caller_id_number = Column(String(50))
     caller_id_name = Column(String(100))
     destination_number = Column(String(50))
-    extension_id = Column(UUID(as_uuid=True), ForeignKey("extensions.id"))
+    extension_id = Column(String(36), ForeignKey("extensions.id"))
     state = Column(String(50))  # NEW, RINGING, ACTIVE, HELD, PARKED, etc.
     created_at = Column(DateTime, default=datetime.utcnow)
     answered_at = Column(DateTime, nullable=True)
     ended_at = Column(DateTime, nullable=True)
     park_orbit = Column(String(20), nullable=True)
-    conference_id = Column(UUID(as_uuid=True), ForeignKey("conferences.id"), nullable=True)
-    metadata = Column(JSONB, default=dict)
+    conference_id = Column(String(36), ForeignKey("conferences.id"), nullable=True)
+    metadata = Column(JSON, default=dict)
     
     # Relationships
     extension = relationship("Extension", back_populates="calls")
@@ -32,7 +32,7 @@ class Call(Base):
 class Conference(Base):
     __tablename__ = "conferences"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(100), nullable=False)
     room_number = Column(String(20), unique=True, nullable=False)
     is_active = Column(Boolean, default=True)
@@ -46,7 +46,7 @@ class Conference(Base):
 class ParkOrbit(Base):
     __tablename__ = "park_orbits"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     orbit_number = Column(String(20), unique=True, nullable=False)
     is_occupied = Column(Boolean, default=False)
     occupied_by_call_uuid = Column(String(100), nullable=True)

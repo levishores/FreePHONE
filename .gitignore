@@ -82,6 +82,7 @@ out/
 *.db
 *.sqlite
 *.sqlite3
+cti_dev.db
 
 # Logs
 logs/

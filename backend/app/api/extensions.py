@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
-import uuid
 
 from app.database import get_async_session
 from app.models.user import Extension, User
@@ -26,7 +25,7 @@ async def get_extensions(
 
 @router.get("/{extension_id}", response_model=ExtensionRead)
 async def get_extension(
-    extension_id: uuid.UUID,
+    extension_id: str,
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_active_user)
 ):
@@ -72,7 +71,7 @@ async def create_extension(
 
 @router.put("/{extension_id}", response_model=ExtensionRead)
 async def update_extension(
-    extension_id: uuid.UUID,
+    extension_id: str,
     extension_data: ExtensionUpdate,
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_active_user)
@@ -101,7 +100,7 @@ async def update_extension(
 
 @router.delete("/{extension_id}")
 async def delete_extension(
-    extension_id: uuid.UUID,
+    extension_id: str,
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_active_user)
 ):
