@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 class ESLClient:
     def __init__(self):
-        self.socket: Optional[socket.socket] = None
+        self.reader: Optional[asyncio.StreamReader] = None
+        self.writer: Optional[asyncio.StreamWriter] = None
         self.ssh_tunnel: Optional[SSHTunnel] = None
         self.local_port: Optional[int] = None
         self.event_handlers: Dict[str, Callable] = {}
@@ -19,6 +20,7 @@ class ESLClient:
     async def connect(self):
         """Connect to FreeSWITCH ESL through SSH tunnel"""
         try:
+            logger.info("🚇 Step 1: Creating SSH tunnel...")
             # Create SSH tunnel
             self.ssh_tunnel = SSHTunnel(
                 ssh_host=settings.freeswitch_host,
@@ -28,35 +30,57 @@ class ESLClient:
                 remote_port=settings.freeswitch_esl_port
             )
             
+            logger.info("🚇 Step 2: Starting SSH tunnel...")
             self.local_port = await self.ssh_tunnel.start()
+            logger.info(f"✅ SSH tunnel started on local port {self.local_port}")
             
-            # Connect to ESL through tunnel
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.connect(('localhost', self.local_port))
+            # Wait a moment for SSH tunnel to be ready
+            await asyncio.sleep(2)
+            
+            # Connect to ESL through tunnel using asyncio streams
+            logger.info(f"🔌 Step 3: Connecting to ESL through tunnel on localhost:{self.local_port}")
+            self.reader, self.writer = await asyncio.wait_for(
+                asyncio.open_connection('localhost', self.local_port),
+                timeout=10.0
+            )
+            logger.info("✅ Connected to ESL through tunnel")
+            
+            # Read initial ESL welcome message
+            logger.info("📨 Step 4: Reading ESL welcome message...")
+            welcome = await self._read_response()
+            logger.info(f"ESL Welcome: {welcome.strip()}")
             
             # Authenticate
-            await self._send_command(f"auth {settings.freeswitch_esl_password}")
+            logger.info("🔑 Step 5: Authenticating...")
+            auth_response = await self._send_command(f"auth {settings.freeswitch_esl_password}")
+            logger.info(f"Auth response: {auth_response.strip()}")
             
             # Subscribe to events
-            await self._send_command("events json ALL")
+            logger.info("📡 Step 6: Subscribing to events...")
+            events_response = await self._send_command("events json ALL")
+            logger.info(f"Events response: {events_response.strip()}")
             
             self.connected = True
-            logger.info("ESL connection established")
+            logger.info("🎉 ESL connection fully established")
             
             # Start event listener
             asyncio.create_task(self._event_listener())
             
         except Exception as e:
-            logger.error(f"Failed to connect to ESL: {e}")
+            logger.error(f"❌ Failed to connect to ESL: {e}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             await self.disconnect()
             
     async def disconnect(self):
         """Disconnect from ESL and close SSH tunnel"""
         self.connected = False
         
-        if self.socket:
-            self.socket.close()
-            self.socket = None
+        if self.writer:
+            self.writer.close()
+            await self.writer.wait_closed()
+            self.writer = None
+            self.reader = None
             
         if self.ssh_tunnel:
             await self.ssh_tunnel.stop()
@@ -64,20 +88,41 @@ class ESLClient:
             
     async def _send_command(self, command: str) -> str:
         """Send command to FreeSWITCH"""
-        if not self.socket:
+        if not self.writer:
             raise Exception("Not connected to ESL")
             
-        self.socket.send(f"{command}\n\n".encode())
+        self.writer.write(f"{command}\n\n".encode())
+        await self.writer.drain()
         return await self._read_response()
         
     async def _read_response(self) -> str:
         """Read response from FreeSWITCH"""
+        if not self.reader:
+            raise Exception("Not connected to ESL")
+            
         response = ""
-        while True:
-            data = self.socket.recv(1024).decode()
-            response += data
-            if "\n\n" in response:
-                break
+        try:
+            # Read with timeout to prevent hanging
+            while True:
+                line = await asyncio.wait_for(self.reader.readline(), timeout=5.0)
+                if not line:
+                    #logger.info("📭 No more data from ESL")
+                    break
+                    
+                line_str = line.decode().rstrip('\r\n')
+                response += line_str + '\n'
+                
+                # ESL responses end with an empty line
+                if line_str == "":
+                    break
+                    
+        except asyncio.TimeoutError:
+            logger.warning("⏰ Timeout reading ESL response")
+            if response:
+                logger.info(f"📨 Partial response received: {response}")
+        except Exception as e:
+            logger.error(f"❌ Error reading ESL response: {e}")
+                
         return response
         
     async def _event_listener(self):

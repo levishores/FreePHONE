@@ -2,7 +2,10 @@ import asyncio
 import paramiko
 import socket
 import threading
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class SSHTunnel:
@@ -29,12 +32,40 @@ class SSHTunnel:
         self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
         # Connect to SSH server
-        private_key = paramiko.RSAKey.from_private_key_file(self.ssh_key_path)
-        self.ssh_client.connect(
-            hostname=self.ssh_host,
-            username=self.ssh_username,
-            pkey=private_key
-        )
+        # Auto-detect key format (OpenSSH, RSA, Ed25519, etc.)
+        try:
+            # Try different key formats
+            private_key = None
+            
+            # First try Ed25519 (common for OpenSSH format)
+            try:
+                private_key = paramiko.Ed25519Key.from_private_key_file(self.ssh_key_path)
+            except:
+                try:
+                    private_key = paramiko.RSAKey.from_private_key_file(self.ssh_key_path)
+                except:
+                    try:
+                        private_key = paramiko.ECDSAKey.from_private_key_file(self.ssh_key_path)
+                    except:
+                        # Last resort - let paramiko auto-detect
+                        private_key = paramiko.DSSKey.from_private_key_file(self.ssh_key_path)
+            
+            self.ssh_client.connect(
+                hostname=self.ssh_host,
+                username=self.ssh_username,
+                pkey=private_key,
+                timeout=10
+            )
+            
+        except Exception as key_error:
+            # If key loading fails, try using key_filename parameter
+            logger.warning(f"Key loading failed: {key_error}, trying key_filename parameter")
+            self.ssh_client.connect(
+                hostname=self.ssh_host,
+                username=self.ssh_username,
+                key_filename=self.ssh_key_path,
+                timeout=10
+            )
         
         # Start tunnel in separate thread
         self.running = True
