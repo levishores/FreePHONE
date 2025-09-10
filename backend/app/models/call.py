@@ -22,7 +22,7 @@ class Call(Base):
     ended_at = Column(DateTime, nullable=True)
     park_orbit = Column(String(20), nullable=True)
     conference_id = Column(String(36), ForeignKey("conferences.id"), nullable=True)
-    metadata = Column(JSON, default=dict)
+    call_metadata = Column(JSON, default=dict)
     
     # Relationships
     extension = relationship("Extension", back_populates="calls")

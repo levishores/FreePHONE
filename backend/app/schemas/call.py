@@ -16,7 +16,7 @@ class CallBase(BaseModel):
 class CallCreate(CallBase):
     extension_id: Optional[str] = None
     conference_id: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = {}
+    call_metadata: Optional[Dict[str, Any]] = {}
 
 
 class CallUpdate(BaseModel):
@@ -30,7 +30,7 @@ class CallUpdate(BaseModel):
     park_orbit: Optional[str] = None
     answered_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
+    call_metadata: Optional[Dict[str, Any]] = None
 
 
 class CallRead(CallBase):
@@ -41,7 +41,7 @@ class CallRead(CallBase):
     created_at: datetime
     answered_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = {}
+    call_metadata: Optional[Dict[str, Any]] = {}
     
     class Config:
         from_attributes = True
